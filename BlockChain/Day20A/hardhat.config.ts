@@ -6,7 +6,15 @@ import 'dotenv/config';
 
 const config: HardhatUserConfig = {
   plugins: [hardhatToolboxViemPlugin],
+  paths: {
+    sources: "./contracts",
+  },
   solidity: {
+    settings: {
+      remappings: [
+        "forge-std/=./node_modules/forge-std/src/",
+      ],
+    },
     profiles: {
       default: {
         version: "0.8.28",
