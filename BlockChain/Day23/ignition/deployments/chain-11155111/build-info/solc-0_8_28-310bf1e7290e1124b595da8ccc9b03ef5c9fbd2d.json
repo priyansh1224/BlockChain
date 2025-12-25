@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-310bf1e7290e1124b595da8ccc9b03ef5c9fbd2d",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/Election.sol": "project/contracts/Election.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/Election.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/**\n * @title Election\n * @dev A smart contract to simulate a general election process.\n * The Election Commission (deployer) can register parties and voters.\n * Registered voters (18 or older) can cast one vote each.\n */\ncontract Election {\n   \n    // ===================================================================\n    // STATE VARIABLES\n    // ===================================================================\n\n    address public electionCommission;\n\n    struct Party {\n        string name;\n        uint totalVote;\n    }\n\n    struct Voter {\n        bool isRegistered;\n        bool hasVoted;\n        uint age;\n    }\n   \n    Party[] public politicalParties;\n    mapping(address => Voter) public voters;\n    \n    // A mapping to efficiently check if a party name has already been registered.\n    // We store a hash of the name to save gas.\n    mapping(bytes32 => bool) private partyNameExists;\n\n    // ===================================================================\n    // EVENTS\n    // ===================================================================\n\n    event PartyRegistered(uint partyId, string name);\n    event VoterRegistered(address indexed voterAddress, uint age);\n    event VoteCasted(address indexed voterAddress, uint partyId);\n\n    // ===================================================================\n    // MODIFIER\n    // ===================================================================\n\n    modifier onlyElectionCommission {\n        require(electionCommission == msg.sender, \"Only the Election Commission can perform this action.\");\n        _;\n    }\n\n    // ===================================================================\n    // CONSTRUCTOR\n    // ===================================================================\n\n    constructor() {\n        electionCommission = msg.sender;\n    }\n   \n    // ===================================================================\n    // ADMINISTRATIVE FUNCTIONS (Commission Only)\n    // ===================================================================\n\n    /**\n     * @dev Registers a new political party.\n     * @param _name The name of the new party.\n     */\n    function registerPoliticalParty(string memory _name) public onlyElectionCommission {\n        bytes32 nameHash = keccak256(abi.encodePacked(_name));\n        \n        // Use the mapping for an efficient O(1) check.\n        require(!partyNameExists[nameHash], \"Party with this name already exists.\");\n\n        partyNameExists[nameHash] = true;\n        \n        Party memory newParty = Party({\n            name: _name,\n            totalVote: 0\n        });\n\n        politicalParties.push(newParty);\n        emit PartyRegistered(politicalParties.length - 1, _name);\n    }\n\n    /**\n     * @dev Registers a new voter.\n     * @param _voter The address of the new voter.\n     * @param _age The age of the new voter.\n     */\n    function registerVoter(address _voter, uint _age) public onlyElectionCommission {\n        require(!voters[_voter].isRegistered, \"Voter is already registered.\");\n        require(_age >= 18, \"Voter must be 18 or older.\");\n        require(_voter != address(0), \"Cannot register the zero address.\");\n\n        voters[_voter].isRegistered = true;\n        voters[_voter].age = _age;\n        emit VoterRegistered(_voter, _age);\n    }\n\n    // ===================================================================\n    // VOTING FUNCTION (Voters Only)\n    // ===================================================================\n\n    /**\n     * @dev Allows a registered voter to cast a single vote for a party.\n     * @param _partyIndex The index of the party in the politicalParties array.\n     */\n    function voting(uint _partyIndex) public {\n        require(voters[msg.sender].isRegistered, \"You are not a registered voter.\");\n        require(!voters[msg.sender].hasVoted, \"You have already cast your vote.\");\n        require(_partyIndex < politicalParties.length, \"Invalid party index.\");\n\n        politicalParties[_partyIndex].totalVote++;\n        voters[msg.sender].hasVoted = true;\n        emit VoteCasted(msg.sender, _partyIndex);\n    }\n\n    // ===================================================================\n    // VIEW FUNCTIONS (Public Access)\n    // ===================================================================\n\n    /**\n     * @dev Returns the name and vote count of the winning party.\n     */\n    function watchResult() public view returns(string memory winningPartyName, uint winningVoteCount) {\n        uint winnerIndex = 0;\n\n        // Find the index of the party with the most votes.\n        for(uint i = 0; i < politicalParties.length; i++) {\n            if(politicalParties[i].totalVote > politicalParties[winnerIndex].totalVote) {\n                winnerIndex = i;\n            }\n        }\n\n        Party storage winner = politicalParties[winnerIndex];\n        return (winner.name, winner.totalVote);\n    }\n\n    /**\n     * @dev Returns the total number of registered political parties.\n     */\n    function getNumberOfParties() public view returns (uint) {\n        return politicalParties.length;\n    }\n}"
+      }
+    }
+  }
+}
