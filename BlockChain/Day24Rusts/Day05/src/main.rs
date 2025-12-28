@@ -61,53 +61,31 @@
 // }
 
 
-struct Rectangle{
+struct Rectangle {
     width: i32,
-    height: i32
+    height: i32,
 }
 
+impl Rectangle {
+    fn new(width: i32, height: i32) -> Self {
+        Self { width, height }
+    }
 
-impl Rectangle{
+    fn area(&self) -> i32 {
+        self.height * self.width
+    }
+
+    fn compare(&self, other: &Rectangle) -> bool {
+        self.height * self.width > other.height * other.width
+    }
+}
+
+fn main() {
+    let r1 = Rectangle::new(10, 20);
+    let r2 = Rectangle::new(15, 18);
     
-    fn new(width: i32, height: i32)->Self{
-        Self {width,height}
-    }
-
-    fn area(&self)->i32{
-      self.height*self.width
-    }
-
-    fn double(&mut self){
-        self.height*=2;
-        self.width*=2;
-    }
-
-    fn compare(&self, other: &Rectangle)->bool{
-      
-      self.height*self.width>other.height*other.width
-    }
-}
-
-// self == this
-
-
-
-
-
-fn main(){
-//    let mut r1 = Rectangle{
-//     width:100,
-//     height:20
-//    };
-
-
-
-let r1 = Rectangle::new(10,20);
-   let r2 = Rectangle::new(15,18);
-   
-//    r1.double();
-   println!("{}",r1.area());
-   println!("{}",r1.compare(&r2));
+    println!("{}", r1.area());
+    println!("{}", r1.compare(&r2));
 }
 
 
